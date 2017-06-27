@@ -38,7 +38,8 @@ class TargetManager(object):
 
         # If target supports hotplugging, online all cpus before perform discovery
         # and restore original configuration after completed.
-        if self.target.has('hotplug'):
+        #FIXME: We don't want to enable / disable the cores each time
+        if False and self.target.has('hotplug'):
             online_cpus = self.target.list_online_cpus()
             try:
                 self.target.hotplug.online_all()
