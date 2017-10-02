@@ -21,9 +21,12 @@ import inspect
 import imp
 import string
 import logging
+import traceback
+
 from collections import OrderedDict, defaultdict
 from itertools import chain
 from copy import copy
+from StringIO import StringIO
 
 from wa.framework.configuration.core import settings, ConfigurationPoint as Parameter
 from wa.framework.exception import (NotFoundError, PluginLoaderError, TargetError,
@@ -35,6 +38,14 @@ from wa.utils.types import identifier, boolean
 
 
 MODNAME_TRANS = string.maketrans(':/\\.', '____')
+
+def get_backtrace():
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    if exc_type and exc_value and exc_traceback:
+        sio = StringIO()
+        traceback.print_exception(exc_type, exc_value, exc_traceback, file=sio)
+        return sio.getvalue()
+    return ""
 
 
 class AttributeCollection(object):
@@ -685,8 +696,8 @@ class PluginLoader(object):
                 for module in walk_modules(package):
                     self._discover_in_module(module)
         except HostError as e:
-            message = 'Problem loading plugins from {}: {}'
-            raise PluginLoaderError(message.format(e.module, str(e.orig_exc)),
+            message = 'Problem loading plugins from {}: {}\n{}'
+            raise PluginLoaderError(message.format(e.module, str(e.orig_exc), get_backtrace()),
                                     e.exc_info)
 
     def _discover_from_paths(self, paths, ignore_paths):
@@ -725,8 +736,8 @@ class PluginLoader(object):
                 msg = 'Failed to load {}'
                 raise PluginLoaderError(msg.format(filepath), sys.exc_info())
         except Exception as e:
-            message = 'Problem loading plugins from {}: {}'
-            raise PluginLoaderError(message.format(filepath, e))
+            message = 'Problem loading plugins from {}: {}\n{}'
+            raise PluginLoaderError(message.format(filepath, e, get_backtrace()))
 
     def _discover_in_module(self, module):  # NOQA pylint: disable=too-many-branches
         self.logger.debug('Checking module %s', module.__name__)
