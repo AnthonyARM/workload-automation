@@ -1,4 +1,5 @@
 import logging
+import subprocess
 from collections import defaultdict, OrderedDict
 
 from wa.framework.exception import ConfigError
@@ -44,7 +45,7 @@ class RuntimeConfig(Plugin):
         self._runtime_params = {}
         try:
             self.initialize()
-        except TargetError:
+        except (TargetError,subprocess.CalledProcessError):
             msg = 'Failed to initialize: "{}"'
             self.logger.debug(msg.format(self.name))
             self._runtime_params = {}
